@@ -1,5 +1,7 @@
 # perturb.met
-perturb-Met can identify transcriptional perturbations centered at hundreds of metabolites in a genome-scale metabolic network. perturb-Met adapts the Kullback-Leibler (KL) divergence concept from information theory to quantify relative changes in the distribution of transcript abundances for all genes connected to a metabolite between two conditions (e.g., AD vs. control). KL divergence quantifies how a statistical distribution differs from a second, reference distribution.  
+perturb-Met can identify transcriptional perturbations centered at hundreds of metabolites in a genome-scale metabolic network, using single cell or single nucleus RNA-seq data.  
+perturb-Met can be used to identify metabolic changes between any two conditions, including using bulk transcriptomic data (RNA-seq or microarray).  
+perturb-Met adapts the Kullback-Leibler (KL) divergence concept from information theory to quantify relative changes in the distribution of transcript abundances for all genes connected to a metabolite between two conditions (e.g., AD vs. control). KL divergence quantifies how a statistical distribution differs from a second, reference distribution.  
 
 perturb-Met offers several advantages over existing methods. 
 * First, perturb-Met addresses both problems by considering relative changes of transcript abundances at individual metabolites, thus it has higher resolution than pathway-level analysis.   
