@@ -1,0 +1,90 @@
+---
+title: "perturb.met workflow"
+output: rmarkdown::html_vignette
+vignette: >
+  %\VignetteIndexEntry{perturb_met_workflow}
+  %\VignetteEngine{knitr::rmarkdown}
+  %\VignetteEncoding{UTF-8}
+---
+
+```{r, include = FALSE}
+knitr::opts_chunk$set(
+  collapse = TRUE,
+  comment = "#>"
+)
+```
+
+```{r}
+#library(perturb.met)
+devtools::load_all()
+library(dplyr)
+ad_sc<-read.table(system.file("extdata", "neuron_scRNA_rawCounts.tsv", package = "perturb.met"),header=T,sep="\t")
+sc_meta<-read.table(system.file("extdata", "neuron_scRNA_metadata.tsv", package = "perturb.met"),header=T,sep="\t")
+```
+  
+```{r,cache=T}
+ad_genes<-ad_sc$geneName
+ad_sc<-ad_sc[,-1]
+
+bad<-sc_meta$cellType %in% c("doublet","unID")
+ad_sc<-ad_sc[,!bad]
+sc_meta<-sc_meta[!bad,]
+
+total<-colSums(ad_sc)
+total<-total/median(total)
+ad_sc<-ad_sc/matrix(rep(total,nrow(ad_sc)),nrow=nrow(ad_sc),ncol=ncol(ad_sc),byrow = T)
+
+```
+  
+  
+### Run perturb-Met analysis on each neuron sub-type separately  
+The results are saved separately in a R data file.  
+```{r,cache=T}
+#cell_types<-c("n2","n3","n4","n5")
+cell_types<-"n5" #only run one subtype to save time.  
+for (i in seq_along(cell_types)){
+  #good<- rowSums(ad_sc[,sc_meta$subIDn==cell_types[i] & sc_meta$batchCond=='ct']>0)>=5 | rowSums(ad_sc[,sc_meta$subIDn==cell_types[i] & sc_meta$batchCond=='AD']>0)>=5
+  ref_freq<-rowSums(ad_sc[,sc_meta$subIDn==cell_types[i] & sc_meta$batchCond=='ct']>0)
+  ad_freq<- rowSums(ad_sc[,sc_meta$subIDn==cell_types[i] & sc_meta$batchCond=='AD']>0)
+  expression_level_final<-data.frame(genes=ad_genes,
+                                     exprs_ref=100*rowMeans(ad_sc[,sc_meta$subIDn==cell_types[i] & sc_meta$batchCond=='ct']),
+                                     exprs_treat=100*rowMeans(ad_sc[,sc_meta$subIDn==cell_types[i] & sc_meta$batchCond=='AD']))
+  good<- expression_level_final$exprs_ref>0 | expression_level_final$exprs_treat>0
+  expression_level_final<-expression_level_final[good,]
+  ref_freq<-ref_freq[good]
+  ad_freq<-ad_freq[good]
+  good<- (expression_level_final$exprs_ref>expression_level_final$exprs_treat & ref_freq>=10) |(expression_level_final$exprs_ref<expression_level_final$exprs_treat & ad_freq>=10) #require a gene to be expressed in at least 10 cells in either condition.  
+  expression_level_final<-expression_level_final[good,]
+  
+  expression_level_final<-na.omit(expression_level_final)
+  result_ad_sc<-findPerturbMet(expression_level_final,mets2genes,4)
+  save(result_ad_sc,file=paste("human_AD_sc_perturbMet_neuron_subcluster_filtered_",cell_types[i],".RData",sep=""))
+}
+```
+  
+### Illustrate how to study the output of perturb-Met
+```{r,fig.width=6}
+load("human_AD_sc_perturbMet_neuron_subcluster_filtered_n5.RData")
+
+perturbed_mets<-result_ad_sc$perturbed_mets
+met_gene_pairs<-result_ad_sc$met_gene_pairs
+
+met2look<-'chsterol'
+sub_met_genes<-met_gene_pairs[met_gene_pairs$mets==met2look,]
+sub_met_genes$exprs_ref<-round(sub_met_genes$exprs_ref,digits = 1)
+sub_met_genes$exprs_treat<-round(sub_met_genes$exprs_treat,digits = 1)
+sub_met_genes$pct_ref<-(sub_met_genes$exprs_ref+1)/sum(sub_met_genes$exprs_ref+1)
+sub_met_genes$pct_treat<-(sub_met_genes$exprs_treat+1)/sum(sub_met_genes$exprs_treat+1)
+sub_met_genes$contribution<- sub_met_genes$pct_treat*log2(sub_met_genes$pct_treat/sub_met_genes$pct_ref)
+sub_met_genes<-arrange(sub_met_genes,desc(abs(contribution)))
+
+sub_met_genes
+
+source( "~/bin/R_scripts/plot_pct_change.R")
+plot_pct_change(met_gene_pairs,"chsterol",c(0,1),6,100) #c(0,1) means placing the legend at top left corner; 6 means maximum number of genes to plot; 100 means y axis limit
+```
+  
+Another example.  
+```{r,fig.width=6}
+plot_pct_change(met_gene_pairs,"hc02057",c(1,1),6,50) #legend at top right; y axis limit at 50.  
+```
