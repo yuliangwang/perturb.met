@@ -11,5 +11,5 @@ To install perturb-Met R package, you need to first install the _devltools_ R pa
 ```r
 library(devtools)
 install_github("yuliangwang/perturb.met")
-library(talklr)
+library(perturb.met)
 ```
