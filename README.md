@@ -13,3 +13,4 @@ library(devtools)
 install_github("yuliangwang/perturb.met")
 library(perturb.met)
 ```
+You can check out how to use perturb-Met in the [demo on Rpubs](https://rpubs.com/wang341/perturb-met).
