@@ -57,8 +57,8 @@ findPerturbMet<-function(expression_data,mets2genes,expressed_threshold){
   }
   perturbed_mets$pval_KL<- rowMeans(random_KL>= matrix(rep(perturbed_mets$KL,num.perm),nrow=nrow(perturbed_mets),ncol=num.perm,byrow=F))
   perturbed_mets$pval_Dirichlet<- rowMeans(random_Dirichlet>= matrix(rep(perturbed_mets$Dirichlet,num.perm),nrow=nrow(perturbed_mets),ncol=num.perm,byrow=F))
-  combined_pval<-metaseqR::fisher.method(perturbed_mets[,c("pval_KL","pval_Dirichlet")],method="fisher",p.corr="BH")
-  perturbed_mets$combined_pval<-combined_pval$p.value
+  fisher_stat<- -2*(log(perturbed_mets$pval_KL)+log(perturbed_mets$pval_Dirichlet))
+  perturbed_mets$combined_pval<-pchisq(fisher_stat,4) # 2k DF(k =2 p-values)
 
   perturbed_mets<-dplyr::arrange(perturbed_mets,combined_pval)
   ind<-match(perturbed_mets$mets,mets2genes$mets)
