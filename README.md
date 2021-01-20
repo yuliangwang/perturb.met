@@ -15,4 +15,6 @@ library(devtools)
 install_github("yuliangwang/perturb.met")
 library(perturb.met)
 ```
-You can check out how to use perturb-Met in the [demo on Rpubs](https://rpubs.com/wang341/perturb-met).
+You can check out how to use perturb-Met in the [demo on Rpubs](https://rpubs.com/wang341/perturb-met).   
+Learn more about perturb-Met and its application on single cell RNA-seq of Alzheimer's disease and metabolic differences across neuronal subtypes in AD:  
+https://www.biorxiv.org/content/10.1101/2021.01.18.427154v1
